@@ -4,6 +4,7 @@ const cookie_parser = require("cookie-parser");
 const cors = require("cors");
 const {verify} = require("jsonwebtoken");
 const {hash, compare} = require("bcryptjs");
+const {fake_db} = require("./fakeDB.js");
 
 //We initiate the express server
 
@@ -50,9 +51,25 @@ server.post("/register", async (req, res) => {
 
     try{
 
-       const hashed_password = await hash(password, 10);
-       console.log(hashed_password);
+        const user  = fake_db.find(user => user.email === email); //homework implement this witha database
+        //1. Check if user is already registered
+        if (user) {
+            throw new Error("User already exist!");
+        }
+        //2. else hash the password
+        const hashed_password = await hash(password, 10);
+        //3. Save into a database
+        fake_db.push({
+            id: fake_db.length,
+            email: email,
+            password: hashed_password
+        });
+        res.send({message: "User created"});
+        console.log(fake_db);
     } catch (err) {
+        res.send({
+            error: err.message
+        });
        console.log(err);
     }
 

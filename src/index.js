@@ -129,8 +129,14 @@ server.listen(process.env.PORT, (err) => {
 });
 
 
+// 3. Logout a User
 
- // 3. Logout a User
+server.post("/logout", async (_req, res) => {
+    res.clearCookie('refesh_token');
+    return res.send({
+        message: "logout"
+    });
+});
 
  // 4. Setup a protected Route
 

@@ -5,6 +5,7 @@ const cors = require("cors");
 const {verify} = require("jsonwebtoken");
 const {hash, compare} = require("bcryptjs");
 const {fake_db} = require("./fakeDB.js");
+const {isAuth} = require("./isAuth");
 const {
     createAccessToken, 
     createRefreshToken, 
@@ -138,7 +139,28 @@ server.post("/logout", async (_req, res) => {
     });
 });
 
- // 4. Setup a protected Route
+// 4. Setup a protected Route
+
+server.post("/protected", async (req, res) => {
+
+    try{
+
+        const user_id = isAuth(req);
+        console.log(user_id);
+        if (user_id !== null) {
+            res.send({
+                data: "This is a protected response"
+            });
+        }
+
+    } catch(error) {
+        res.send({
+            error: error.message
+        });
+    }
+
+});
+
 
  // 5. Get a new access token with a refresh token 
 

@@ -133,7 +133,9 @@ server.listen(process.env.PORT, (err) => {
 // 3. Logout a User
 
 server.post("/logout", async (_req, res) => {
-    res.clearCookie('refesh_token');
+    res.clearCookie('refresh_token',{
+        path: '/refresh_token'
+    });
     return res.send({
         message: "logout"
     });
@@ -163,5 +165,63 @@ server.post("/protected", async (req, res) => {
 
 
  // 5. Get a new access token with a refresh token 
+
+ server.post("/refresh_token", async (req, res) => {
+    const token = req.cookies.refresh_token;
+    // If we dont have the token in our request
+
+    if (!token)
+        //throw new Error("");
+        return res.send({
+            access_token: ''
+        });
+    
+    //We have a token, verify
+
+    let payload;
+
+    try{
+
+        payload = verify(token, process.env.REFRESH_TOKEN_SECRET);
+
+    } catch (error) {
+        return res.send({
+            access_token: '',
+            message: error.message
+        });
+    }
+
+    //we know the token is valid, check if user exist
+
+    const user = fake_db.find(user => user.id === payload.user_id);
+
+    if (!user) 
+        return res.send({
+            access_token: ''
+        });
+
+    // if user exist, check if tokens match
+
+    if (user.refresh_token !== token)
+        return res.send({
+            access_token: ''
+        });
+
+    //token exist, create new pair of tokens
+
+    const access_token = createAccessToken(user.id);
+    const refresh_token = createRefreshToken(user.id);
+    
+    user.refresh_token = refresh_token;
+
+    sendRefreshToken(res, refresh_token);
+
+    sendAccessToken(res, req, access_token);
+
+    return res.send({
+        access_token
+    });
+
+ });
 
  // 6. Revoke a Refresh token (Homework)
